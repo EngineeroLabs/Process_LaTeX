@@ -1,0 +1,18 @@
+Version 0.1.4
+	# LaTeX_Converter.pl:
+	Updated "latex" call to accommodate new server architecture. A new
+	temporary folder is now created under "/tmp", and all LaTeX operations are
+	performed therein. All other operations are still performed in the user
+	temporary directory.
+
+	# template.tex
+	Changes have been made to accommodate dynamically generated path to
+	"fontsize.tex" and "equation.tex". An environment variable "\path" is
+	defined by the LaTeX call from LaTeX_Converter.pl, and used to point to
+	the appropriate files.
+
+Version 0.1.3
+	Updated handling of padding files. Padding files are now written to
+	the subdirectory Process_LaTeX/temporary/(subdirectory) instead of to
+	Process_LaTeX/temporary. The padding files are now cleaned after each
+	call to LiW and recreated for each new job.

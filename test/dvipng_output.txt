@@ -1,0 +1,2 @@
+This is ../dvipng 1.5 Copyright 2002-2005 Jan-Åke Larsson
+[1 depth=30] 
