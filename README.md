@@ -3,10 +3,12 @@
 LaTeX in Word is a GPL-licensed tool that allows equations to be used in
 Microsoft Word documents. The client-side of the program is implemented as VBA
 macros and can be found in a separate package. In contrast, this package
-contains the server-side files in the form of the tarball
-"Process\_LaTeX.tar.gz". It is recommended that you read the Word document in
-the client-side package before creating your own LaTeX in Word server. For
-casual use, the default server may be sufficient.
+contains the server-side files for LaTeX in Word. It is recommended that you
+read the Word document in the client-side package before creating your own
+LaTeX in Word server. For casual use, the default server may be sufficient.
+The client-side project repository can be found at:
+
+<https://github.com/Engineero/latex_in_word>
 
 Briefly, installation consists of installing PERL, PHP, LaTeX, dvipng, and
 ImageMagick on a \*nix web server. The LaTeX in Word web server can then be
