@@ -36,6 +36,19 @@ the "temporary" directory is stored in the tarball, so this file can be deleted
 after extraction. Since the other files are written in PERL, PHP, and LaTeX,
 there is no separate source code.
 
+# Windows Version
+
+A Windows modification was submitted by jlh on 2016/05/12 running on Windows with:
+
+* XAMPP for Windows 5.6.14
+* MiKTeX 2.9                          (latex, dvipng)
+* Strawberry Perl (64-bit) 5.22.0.1   (perl)
+* ImageMagick-6.9.2-Q16               (convert, identify)
+
+Executables of the packages mentioned above must be on the system's search path.
+
+# Licensing
+
 Complete license information can be found in the file "gpl.txt" stored in this
 package. A list of recent changes can be found in "changelog.txt". Updates and
 additional information can be found on the GitHub project page:
