@@ -47,28 +47,39 @@ if($_POST)
 else
     $formula = $_GET['formula'];
 
+$encodedFormula = $formula;
+
 # PHP versions < 6 have a feature called "magic quotes" inteded to make input 
 # safe by escaping dangerous characters. If this feature is enabled, strip the 
 # extra slashed it adds.
-if(get_magic_quotes_gpc())
+if(get_magic_quotes_gpc()) {
     $formula = stripslashes($formula);
+    print("Stripped 'magic quotes' extra slashes $formula<br>\n");
+}
 
 # PHP tries to undo the percent encoding, but the following restores the
 # encoding because it's also handy for passing a string as an argument.
 # "escapeshellarg" is used for added security.
-$LaTeX_String = escapeshellarg(urlencode($formula));
+# $LaTeX_String = escapeshellarg(urlencode($formula));
+$LaTeX_String = urlencode($formula); # jlh - the above caused trouble on my windows machine setting
+#$LaTeX_String_Display = str_replace('%', '%%',$LaTeX_String);
+
 
 # Call PERL to generate the PNG and display the required baseline offset. If
 # necessary, the PERL script will also display any error messages.
-if ($_GET['dont_del'])
-    system("/usr/local/bin/perl LaTeX_Converter.pl --URL=\"$LaTeX_String\" --Dont_Del");
-else
-    system("/usr/local/bin/perl LaTeX_Converter.pl --URL=\"$LaTeX_String\"");
+if ($_GET['dont_del']) {
+    print("Calling perl LaTeX_Converter.pl --URL=\"$LaTeX_String\" --Dont_Del<br>\n");
+    system("perl LaTeX_Converter.pl --URL=\"$LaTeX_String\" --Dont_Del");
+} else {
+    print("Calling perl LaTeX_Converter.pl --URL=\"$LaTeX_String\"<br>\n");
+    system("perl LaTeX_Converter.pl --URL=\"$LaTeX_String\"");
+}
 
 #log the IP address
 $dtime = date('r'); 
 $ip = getenv("REMOTE_ADDR");
-$fp = fopen("/home/campus/ntoner/liwLog.txt", "a"); 
-fputs($fp, "$dtime: $ip\n"); 
+#$fp = fopen("G:/xampp/htdocs/process_latex/requestLog.txt", "a"); 
+$fp = fopen("./requestLog.txt", "a"); # log ip in local file
+fputs($fp, "$dtime: $ip $\n"); 
 fclose($fp);
 ?>

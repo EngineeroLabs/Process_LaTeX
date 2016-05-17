@@ -55,6 +55,14 @@
 # Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 ################################################################################
 
+# Windows modification by jlh, 2016/05/12
+# running on windows with
+#   XAMPP for Windows 5.6.14
+#   MiKTeX 2.9                          (latex, dvipng)
+#   Strawberry Perl (64-bit) 5.22.0.1   (perl)
+#   ImageMagick-6.9.2-Q16               (convert, identify)
+# executables of the packages mentioned above have to be on system's search path
+
 use strict;
 use Getopt::Long;
 use File::Copy;
@@ -65,12 +73,8 @@ use File::Copy;
 $/ = undef; #treat multi-line files as a single line
 
 #path names; see above note
-my $Convert_Path = '/usr/local/bin';
-my $Dvipng_Path = '/home/campus/ntoner/www/Process_LaTeX';
-my $Temp_Path = "/tmp";
-my $Identify_Path = '/usr/local/bin';
-my $LaTeX_Path = '/usr/local/bin';
-my $Remove_Path = '/usr/local/bin';
+my $ProcessLatex_Path = '.';
+
 #other globals
 my $Max_LaTeX_String_Length = 3000; #limit string to this size for security
 my $res = 600; #resolution for the generated PNG
@@ -79,9 +83,10 @@ my $res = 600; #resolution for the generated PNG
 #the "-density" option in convert, but the version of convert on some servers
 #doesn't support this option.  Refer to the official PNG documentation for more
 #details on this chunk.
-my $pHYs_chunk = join('', chr(0),   chr(0),   chr(0),   chr(9), chr(112),  chr(72),  chr(89), chr(115),
-                          chr(0),   chr(0),  chr(92),  chr(70),   chr(0),   chr(0),  chr(92),  chr(70),
-                          chr(1),  chr(20), chr(148),  chr(67),  chr(65));
+#my $pHYs_chunk = join('', chr(0),   chr(0),   chr(0),   chr(9), chr(112),  chr(72),  chr(89), chr(115),
+#                          chr(0),   chr(0),  chr(92),  chr(70),   chr(0),   chr(0),  chr(92),  chr(70),
+#                          chr(1),  chr(20), chr(148),  chr(67),  chr(65));
+# jlh - seems to work fine without this chunk, using -density option of convert with this setup
 my %Text_Heights = ('10', 57, '11', 62, '12', 68);
 #%Text_Heights is a hash of the nominal text heights (in pixels) for each of
 #the allowed font sizes (in pixels).  This information is used to calculate
@@ -93,18 +98,20 @@ my $Dont_Delete_Directory = ''; #true when the command-line option "Dont_Del" is
                                 #directory from being deleted after an error
 my $Font_Size;
 my $LaTeX_String;
-my $pid = getppid(); #The pid is used to uniquely name a directory for temporary
+# my $pid = getppid(); #The pid is used to uniquely name a directory for temporary
                      #files; this avoids issues with file locking if this script
                      #is called multiple times.  Also see note above.
+my $pid = $$;        # getppid not implemented in Strawberry Perl for Windows, $$ works fine         
 
-my $PID_Path = "$Temp_Path/$pid";
-my $Local_Path = "$Dvipng_Path/temporary/$pid";
+# 
+my $Local_Path = "$ProcessLatex_Path/temporary/$pid";
+my $PID_Path = $Local_Path; # simple setting on my Windows machine, all local, no absolute paths
 
 GetOptions ("URL=s" => \$URL_String, 'Dont_Del' => \$Dont_Delete_Directory);
 
 #remove starting and ending single quotes added by PHP's escapeshellarg function
 $URL_String =~ s/^'//;
-chop($URL_String);
+#chop($URL_String); # jlh - cuts the last letter on my windows machine, don't know why
 #font size is given at the beginning of the URL string (separated by a dot)
 #note that LaTeX only recognizes font sizes of 10, 11, and 12; other values are
 #treated as 10 and don't give a warning
@@ -125,6 +132,8 @@ if (length($LaTeX_String) > $Max_LaTeX_String_Length)
   {print "Error: LaTeX string cannot be longer than $Max_LaTeX_String_Length characters."}
 else
 {
+  # jlh - the following passage not necessary on simple Windows configuration
+  # jlh - Latex directly reads and writes from local path ./temporary/$pid
   #make a subdirectory called "/tmp/$pid" and change to it
   umask(0002); #set write privileges for mkdir; this mask gives privileges of
                #777-002=775 (i.e. full permissions for user and group, but world
@@ -135,43 +144,45 @@ else
   #     print "Error: $cwd"
   # }
 
-  if (!mkdir("$Local_Path"))
+ # if (!mkdir("$Local_Path"))
+ # {
+ #   print "Error: Unable to create directory \"temporary/$pid\".";
+ #   print "Error: Unable to create directory Local_Path \"$Local_Path\".";
+ # }
+  if (!mkdir("$PID_Path"))
   {
-    print "Error: Unable to create directory \"temporary/$pid\".";
+    print "Error: Unable to create directory PID_Path \"$PID_Path\".";
   }
-  elsif (!mkdir("$PID_Path"))
-  {
-    print "Error: Unable to create directory \"$PID_Path\".";
-  }
-  elsif (!copy("$Dvipng_Path/template.tex", "$PID_Path"))
+  elsif (!copy("$ProcessLatex_Path/template.tex", "$PID_Path"))
   {
     print "Error: Unable to copy \"template.tex\" to \"$PID_Path\".";
   }
-  elsif (!copy("$Dvipng_Path/template.aux", "$PID_Path"))
+  elsif (!copy("$ProcessLatex_Path/template.aux", "$PID_Path"))
   {
     print "Error: Unable to copy \"template.aux\" to \"$PID_Path\".";
   }
-  elsif (!copy("$Dvipng_Path/preview.sty", "$PID_Path"))
+  elsif (!copy("$ProcessLatex_Path/preview.sty", "$PID_Path"))
   {
     print "Error: Unable to copy \"preview.sty\" to \"$PID_Path\".";
   }
-  elsif (!chdir("$Local_Path"))
-  {
-    print "Error: Unable to change to directory \"temporary/$pid/\".";
-    if (!$Dont_Delete_Directory)
-    {
-      system("$Remove_Path/rm -rf $PID_Path");     #remove the directory
-      system("$Remove_Path/rm -rf $Local_Path");   #remove the directory
-    }
-  }
+  # jlh - obsolete, same as above
+  #elsif (!chdir("$Local_Path"))
+  #{
+  #  print "Error: Unable to change to directory \"temporary/$pid/\".";
+  #  if (!$Dont_Delete_Directory)
+  #  {
+  #    #system("$Remove_Path/rm -rf $PID_Path");     #remove the directory
+  #    system("rmdir \"$Local_Path\" /s /q");   #remove the directory
+  #  }
+  #}
   else #actually create an image
   {
     if ( !Create_Image() && !$Dont_Delete_Directory )
     {
       #there was an error creating the image; remove the temporary directory
-      chdir("$Dvipng_Path");        # change back to the Process_LaTeX dir
-      system("$Remove_Path/rm -rf $PID_Path");     # remove temp dir
-      system("$Remove_Path/rm -rf $Local_Path");   # remove temp dir
+      # chdir("$ProcessLatex_Path");        # change back to the Process_LaTeX dir
+      #system("rmdir \"$PID_Path\" /q /s");     # remove temp dir
+      system("rmdir \"$Local_Path\" /q /s");   # remove temp dir
     }
   }
 }
@@ -202,7 +213,7 @@ sub Create_Image
   #latex template
   if (!open(EQN_FILE, ">", "$PID_Path/equation.tex"))
   {  
-    print "Error: Unable to open equation.tex for writing.";
+    print "Error: Unable to open $PID_Path/equation.tex for writing.";
     return(0);
   }
   print EQN_FILE $LaTeX_String;
@@ -230,15 +241,16 @@ sub Create_Image
   # we pass an absolute path to the file template.tex as an environment
   # variable so that LaTeX looks in /tmp/$pid for fontsize.tex and
   # equation.tex.
-  $temp = system("$LaTeX_Path/latex \"\\def\\path{$PID_Path} \\input{$PID_Path/template.tex}\" >/dev/null");
+  my $latexCall = "latex \"\\def\\path{$PID_Path} \\input{$PID_Path/template.tex} \\output{$PID_Path}\" -output-directory=\"$PID_Path\"";
+  $temp = system($latexCall);    
 
   if ($temp >> 8) #the return value of a system call represents the exit status
                   #of the call; non-zero values of the 9th bit mean the call
                   #failed
   {
-    print "Error: Call to LaTeX failed.\n";
+    print "Error: Call to LaTeX '$latexCall' failed with return value $temp.\n";
     if (!open(LOG_FILE, "<", "$Local_Path/template.log"))
-      {print "Log file (template.log) unavailable.";}
+      {print "Log file ($Local_Path/template.log) unavailable.";}
     else
     {
       $temp = <LOG_FILE>;
@@ -256,7 +268,9 @@ sub Create_Image
   # Note: despite being called on files located in /tmp/$pid, LaTeX outputs
   # the file template.dvi to $Local_Path. The remaining operations can all be
   # done on in the local directory.
-  $temp = system("$Dvipng_Path/dvipng -D$res -Q 1 $Local_Path/template.dvi -depth >$Local_Path/dvipng_output.txt");
+  # my $DvipngCall = "$Dvipng_Path/dvipng -D$res -Q 1 $Local_Path/template.dvi -depth >$Local_Path/dvipng_output.txt";
+  my $DvipngCall = "dvipng -D$res -Q 1 -o \"$Local_Path/template1.png\" \"$Local_Path/template.dvi\" -depth > $Local_Path/dvipng_output.txt";
+  $temp = system($DvipngCall);
   if ($temp >> 8)
   {
     print "Error: Call to dvipng failed.";
@@ -271,8 +285,10 @@ sub Create_Image
   }
   $temp = <DEPTH_FILE>;
   close(DEPTH_FILE);
-  if ($temp =~ m/depth=(\d*)/)
-    {$Baseline_Depth = $1;}
+  if ($temp =~ m/depth=(\d*)/) {
+    $Baseline_Depth = $1;
+    print "Baseline depth $Baseline_Depth found from pdipng log.<br>\n";
+}
   else
   {
     print "Error: Opened dvipng_output.txt, but couldn't find baseline depth information.";
@@ -281,27 +297,27 @@ sub Create_Image
 
   #insert the pHYs chunk in the PNG file; dvipng doesn't add this optional
   #chunk, so the resolution normally wouldn't get specified
-  if (!open(PNG_FILE, "<", "$Local_Path/template1.png"))
-  {
-    print "Error: Unable to open template1.png for reading.";
-    return(0);
-  }
-  binmode PNG_FILE;
-  $temp = <PNG_FILE>;
-  close(PNG_FILE);
+  #if (!open(PNG_FILE, "<", "$Local_Path/template1.png"))
+  #{
+  #  print "Error: Unable to open template1.png for reading.";
+  #  return(0);
+  #}
+  #binmode PNG_FILE;
+  #$temp = <PNG_FILE>;
+  #close(PNG_FILE);
   #insert pHYs chunk immediately before the (required) IDAT chunk
-  $temp =~ m/....IDAT/s; #slash-s is required to allow "." to match a newline,
+#  $temp =~ m/....IDAT/s; #slash-s is required to allow "." to match a newline,
                          #since one of the 4 characters in the length field
                          #could be a \n
-  $temp = $`.$pHYs_chunk.$&.$';
-  if (!open(PNG_FILE, ">", "$Local_Path/template1.png"))
-  {
-    print "Error: Unable to open template1.png for writing.";
-    return(0);
-  }
-  binmode PNG_FILE;
-  print PNG_FILE $temp;
-  close(PNG_FILE);
+#  $temp = $`.$pHYs_chunk.$&.$';
+  #if (!open(PNG_FILE, ">", "$Local_Path/template1.png"))
+  #{
+  #  print "Error: Unable to open template1.png for writing.";
+  #  return(0);
+  #}
+  #binmode PNG_FILE;
+  #print PNG_FILE $temp;
+  #close(PNG_FILE);
 
   #Call ImageMagick's "convert" command to:
   #
@@ -318,6 +334,10 @@ sub Create_Image
   #  of the PNG will be vertically centered.  This allows equation numbers
   #  written in Word to appear correctly.
   $Baseline_Depth = $Baseline_Depth-4;
+  
+  # jlh - used in the -density option of convert
+  my $convertRes = $res;
+
 
   if ( ($LaTeX_String =~ m/\\begin\{displaymath\}/)
        || ($LaTeX_String =~ m/\\begin\{eqnarray\**\}/)
@@ -332,7 +352,8 @@ sub Create_Image
     #A display equation has been specified.
 
     #trim the image
-    $temp = system("$Convert_Path/convert -border 5 -bordercolor white -threshold 50% -trim $Local_Path/template1.png $Local_Path/template1.png");
+    my $trimCall = "convert -density $convertRes -units PixelsPerInch -border 5 -bordercolor white -threshold 50% -trim $Local_Path/template1.png $Local_Path/template1.png";
+    $temp = system($trimCall);
     if ($temp >> 8)
     {
       print "Error: Call to convert failed.";
@@ -341,7 +362,7 @@ sub Create_Image
     $Already_Trimmed = 1;
 
     #use "identify" to determine the height
-    $temp = system("$Identify_Path/identify $Local_Path/template1.png >$Local_Path/identify_output.txt");
+    $temp = system("identify $Local_Path/template1.png >$Local_Path/identify_output.txt");
     if ($temp >> 8) 
     {
       print "Error: Call to identify failed.";
@@ -382,7 +403,8 @@ sub Create_Image
   #create the padding file, if it doesn't already exist
   if (!(-e "$Local_Path/pad$Numb_Padding_Pxls.png"))
   {
-    $temp = system("$Convert_Path/convert -size 1x$Numb_Padding_Pxls xc:white $Local_Path/pad$Numb_Padding_Pxls.png");
+    my $paddingCall = "convert -size 1x$Numb_Padding_Pxls xc:white $Local_Path/pad$Numb_Padding_Pxls.png";
+    $temp = system($paddingCall);
     if ($temp >> 8)
     {
       print "Error: Unable to create padding file pad$Numb_Padding_Pxls.png.";
@@ -390,11 +412,13 @@ sub Create_Image
     }
   }
   #call convert
-  if ($Already_Trimmed) #don't trim again if the image was already trimmed; this
+  if ($Already_Trimmed) {#don't trim again if the image was already trimmed; this
                         #check prevents non-whitespace from being removed
-    {$temp = system("$Convert_Path/convert $Local_Path/template1.png -background white $Local_Path/pad$Numb_Padding_Pxls.png -append $Local_Path/template1.png");}
-  else
-    {$temp = system("$Convert_Path/convert $Local_Path/template1.png -border 5 -bordercolor white -threshold 50% -trim -background white $Local_Path/pad$Numb_Padding_Pxls.png -append $Local_Path/template1.png");}
+    my $convertCall = "convert \"$Local_Path/template1.png\" -density $convertRes -units PixelsPerInch -background white \"$Local_Path/pad$Numb_Padding_Pxls.png\" -append \"$Local_Path/template1.png\"";
+    $temp = system($convertCall);
+  } else {
+    my $convertCall = "convert \"$Local_Path/template1.png\" -density $convertRes -units PixelsPerInch -border 5 -bordercolor white -threshold 50% -trim -background white \"$Local_Path/pad$Numb_Padding_Pxls.png\" -append \"$Local_Path/template1.png\"";
+    $temp = system($convertCall);}
   if ($temp >> 8)
   {
     print "Error: Call to convert failed.";

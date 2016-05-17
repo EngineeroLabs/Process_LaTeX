@@ -42,8 +42,7 @@ if ( (preg_match('/\D/', $Directory_Name))
   {echo 'Invalid directory name.';}
 else
 {
-    system("/usr/local/bin/rm -r /tmp/$Directory_Name");
-    system("/usr/local/bin/rm -r temporary/$Directory_Name");
+    system("rmdir \"./temporary/$Directory_Name\" /s /q");
 }
   # {system("rm -r temporary/$Directory_Name");}
 ?>
