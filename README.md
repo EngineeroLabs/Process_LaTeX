@@ -47,6 +47,10 @@ A Windows modification was submitted by jlh on 2016/05/12 running on Windows wit
 
 Executables of the packages mentioned above must be on the system's search path.
 
+# Help Wanted
+
+If you would like to contribut to LaTeX in Word, we are looking for somebody who can help get the Process_LaTeX server operational on github.io. Contact Engineero if you are familiar with github.io and would like to help out.
+
 # Licensing
 
 Complete license information can be found in the file "gpl.txt" stored in this
