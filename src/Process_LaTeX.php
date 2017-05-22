@@ -38,6 +38,7 @@
 # means that the correct PNG will not be (re)generated and the wrong image may 
 # be loaded into Word.  This problem can be prevented by disabling caching with 
 # the following line.
+ini_set('date.timezone','Asia/Shanghai');
 header("Cache-Control: no-cache, must-revalidate");
 
 # Get the formula whether from POST (preferable) or GET (for backward 
@@ -62,23 +63,23 @@ if(get_magic_quotes_gpc()) {
 # "escapeshellarg" is used for added security.
 # $LaTeX_String = escapeshellarg(urlencode($formula));
 $LaTeX_String = urlencode($formula); # jlh - the above caused trouble on my windows machine setting
+$L = urlencode($formula); # jlh - the above caused trouble on my windows machine setting
 #$LaTeX_String_Display = str_replace('%', '%%',$LaTeX_String);
 
 
 # Call PERL to generate the PNG and display the required baseline offset. If
 # necessary, the PERL script will also display any error messages.
 if ($_GET['dont_del']) {
-    print("Calling perl LaTeX_Converter.pl --URL=\"$LaTeX_String\" --Dont_Del<br>\n");
+    print("Calling perl LaTeX_Converter.pl --URL=\"$L\" --Dont_Del<br>\n");
     system("perl LaTeX_Converter.pl --URL=\"$LaTeX_String\" --Dont_Del");
 } else {
     print("Calling perl LaTeX_Converter.pl --URL=\"$LaTeX_String\"<br>\n");
-    system("perl LaTeX_Converter.pl --URL=\"$LaTeX_String\"");
+    system("perl LaTeX_Converter.pl --URL=\"$LaTeX_String\"  --Dont_Del");
 }
 
 #log the IP address
 $dtime = date('r'); 
 $ip = getenv("REMOTE_ADDR");
-#$fp = fopen("G:/xampp/htdocs/process_latex/requestLog.txt", "a"); 
 $fp = fopen("./requestLog.txt", "a"); # log ip in local file
 fputs($fp, "$dtime: $ip $\n"); 
 fclose($fp);

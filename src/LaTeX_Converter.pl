@@ -73,7 +73,7 @@ use File::Copy;
 $/ = undef; #treat multi-line files as a single line
 
 #path names; see above note
-my $ProcessLatex_Path = '.';
+my $ProcessLatex_Path = '/var/www';
 
 #other globals
 my $Max_LaTeX_String_Length = 3000; #limit string to this size for security
@@ -127,7 +127,7 @@ $LaTeX_String =~ s/%([0-9A-Fa-f]{2})/chr(hex($1))/eg;
 #remove high-order and control bytes for security
 #note that tab (0x07) and newline (0x0D) are allowed
 $LaTeX_String =~ s/[\x00-\x06\x08-\x0C\x0E-\x1f\x7f-\xff]//g;
-
+print $LaTeX_String;
 if (length($LaTeX_String) > $Max_LaTeX_String_Length)
   {print "Error: LaTeX string cannot be longer than $Max_LaTeX_String_Length characters."}
 else
@@ -161,7 +161,8 @@ else
   {
     print "Error: Unable to copy \"template.aux\" to \"$PID_Path\".";
   }
-  elsif (!copy("$ProcessLatex_Path/preview.sty", "$PID_Path"))
+  # elsif (!copy("$ProcessLatex_Path/preview.sty", "$PID_Path"))
+  elsif (system("cp $ProcessLatex_Path/preview.sty $PID_Path/"))
   {
     print "Error: Unable to copy \"preview.sty\" to \"$PID_Path\".";
   }
@@ -182,7 +183,8 @@ else
       #there was an error creating the image; remove the temporary directory
       # chdir("$ProcessLatex_Path");        # change back to the Process_LaTeX dir
       #system("rmdir \"$PID_Path\" /q /s");     # remove temp dir
-      system("rmdir \"$Local_Path\" /q /s");   # remove temp dir
+      # system("rmdir \"$Local_Path\" /q /s");   # remove temp dir
+      # system("rm \"$Local_Path/../../template.dvi\"");   # remove temp dir
     }
   }
 }
@@ -207,8 +209,8 @@ sub Create_Image
   my $temp;
 
   # Set the TEXINPUTS environment variable so that LaTeX knows where to look
-  $ENV{'TEXINPUTS'} = "$PID_Path:$ENV{'TEXINPUTS'}";
-
+  $ENV{TEXINPUTS} = "$PID_Path/:$ENV{TEXINPUTS}";
+  # system("export TEXINPUTS=$PID_Path//:");
   #save the LaTeX string to file "equation.tex", which is referenced by the
   #latex template
   if (!open(EQN_FILE, ">", "$PID_Path/equation.tex"))
@@ -226,7 +228,7 @@ sub Create_Image
     print "Error: Unable to open fontsize.tex for writing.";
     return(0);
   }
-  print FS_FILE "\\documentclass\n[$Font_Size pt]\n{article}";
+  print FS_FILE "%&latex\n\\documentclass\n[$Font_Size pt]\n{article}";
   close(FS_FILE);
 
   #call LaTeX (TEX -> DVI)
@@ -241,8 +243,9 @@ sub Create_Image
   # we pass an absolute path to the file template.tex as an environment
   # variable so that LaTeX looks in /tmp/$pid for fontsize.tex and
   # equation.tex.
-  my $latexCall = "latex \"\\def\\path{$PID_Path} \\input{$PID_Path/template.tex} \\output{$PID_Path}\" -output-directory=\"$PID_Path\"";
-  $temp = system($latexCall);    
+  my $latexCall = "/usr/bin/latex -output-format=dvi -output-directory=\"$PID_Path\" \"\\def\\path{$PID_Path} \\input{$PID_Path/template.tex} \\output{$PID_Path}\"";
+  $temp = system("$latexCall > /dev/null");    
+
 
   if ($temp >> 8) #the return value of a system call represents the exit status
                   #of the call; non-zero values of the 9th bit mean the call
@@ -259,7 +262,7 @@ sub Create_Image
       $temp =~ s/(\W|\n)*\nHere is how much of TeX's memory you used:(.|\n)*//; #
       print "Contents of log file:\n========================================\n";
       print "$temp";
-      print "\n========================================";
+      print "\n========================================\n";
     }
     return(0);
   }
@@ -269,7 +272,11 @@ sub Create_Image
   # the file template.dvi to $Local_Path. The remaining operations can all be
   # done on in the local directory.
   # my $DvipngCall = "$Dvipng_Path/dvipng -D$res -Q 1 $Local_Path/template.dvi -depth >$Local_Path/dvipng_output.txt";
+
   my $DvipngCall = "dvipng -D$res -Q 1 -o \"$Local_Path/template1.png\" \"$Local_Path/template.dvi\" -depth > $Local_Path/dvipng_output.txt";
+  print "\n========================================\n";
+  print $DvipngCall;
+  print "\n========================================\n";
   $temp = system($DvipngCall);
   if ($temp >> 8)
   {
@@ -403,8 +410,11 @@ sub Create_Image
   #create the padding file, if it doesn't already exist
   if (!(-e "$Local_Path/pad$Numb_Padding_Pxls.png"))
   {
+
+    # my $paddingCall = "convert -size 1x$Numb_Padding_Pxls xc:white $Local_Path/pad$Numb_Padding_Pxls.png";
     my $paddingCall = "convert -size 1x$Numb_Padding_Pxls xc:white $Local_Path/pad$Numb_Padding_Pxls.png";
     $temp = system($paddingCall);
+
     if ($temp >> 8)
     {
       print "Error: Unable to create padding file pad$Numb_Padding_Pxls.png.";
