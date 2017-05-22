@@ -40,4 +40,4 @@ COPY src/ /var/www/
 EXPOSE 80
 
 # Executing supervisord
-CMD ["supervisord", "-n"]
+CMD ["supervisord", "-c", "/etc/supervisord.conf"]
