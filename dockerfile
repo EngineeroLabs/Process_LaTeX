@@ -36,6 +36,8 @@ ADD config/supervisord.conf /etc/
 # Adding the default file
 COPY src/ /var/www/
 
+RUN chmod -R 777 /var/www
+
 # Set the port to 80 
 EXPOSE 80
 
