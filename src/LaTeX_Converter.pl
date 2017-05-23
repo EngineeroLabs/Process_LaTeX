@@ -209,7 +209,7 @@ sub Create_Image
   my $temp;
 
   # Set the TEXINPUTS environment variable so that LaTeX knows where to look
-  $ENV{TEXINPUTS} = "$PID_Path:" # :$ENV{TEXINPUTS}";
+  $ENV{TEXINPUTS} = "$PID_Path:"; # :$ENV{TEXINPUTS}";
   # system("export TEXINPUTS=$PID_Path//:");
   #save the LaTeX string to file "equation.tex", which is referenced by the
   #latex template
