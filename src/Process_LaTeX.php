@@ -74,7 +74,7 @@ if ($_GET['dont_del']) {
     system("perl LaTeX_Converter.pl --URL=\"$LaTeX_String\" --Dont_Del");
 } else {
     print("Calling perl LaTeX_Converter.pl --URL=\"$LaTeX_String\"<br>\n");
-    system("perl LaTeX_Converter.pl --URL=\"$LaTeX_String\"");
+    system("perl /var/www/LaTeX_Converter.pl --URL=\"$LaTeX_String\"  --Dont_Del");
 }
 
 #log the IP address

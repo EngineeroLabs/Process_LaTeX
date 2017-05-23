@@ -13,7 +13,7 @@ MAINTAINER Trim21 <Trim21me@gmail.com>
 ADD config/nginx.repo /etc/yum.repos.d/nginx.repo
 
 # Installing nginx 
-RUN yum -y install nginx texlive dvipng ImageMagick texlive-preprint
+RUN yum -y install nginx texlive dvipng ImageMagick texlive-preprint perl
 
 
 # Installing PHP

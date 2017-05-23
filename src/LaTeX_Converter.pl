@@ -209,7 +209,7 @@ sub Create_Image
   my $temp;
 
   # Set the TEXINPUTS environment variable so that LaTeX knows where to look
-  $ENV{TEXINPUTS} = "$PID_Path:$ENV{TEXINPUTS}";
+  $ENV{TEXINPUTS} = "$PID_Path:" # :$ENV{TEXINPUTS}";
   # system("export TEXINPUTS=$PID_Path//:");
   #save the LaTeX string to file "equation.tex", which is referenced by the
   #latex template
@@ -243,7 +243,7 @@ sub Create_Image
   # we pass an absolute path to the file template.tex as an environment
   # variable so that LaTeX looks in /tmp/$pid for fontsize.tex and
   # equation.tex.
-  my $latexCall = "latex -output-format=dvi -output-directory=\"$PID_Path\" \"\\def\\path{$PID_Path} \\input{$PID_Path/template.tex} \\output{$PID_Path}\"";
+  my $latexCall = "/usr/bin/latex -output-format=dvi -output-directory=\"$PID_Path\" \"\\def\\path{$PID_Path} \\input{$PID_Path/template.tex} \\output{$PID_Path}\"";
   $temp = system("$latexCall > /dev/null");    
 
 
