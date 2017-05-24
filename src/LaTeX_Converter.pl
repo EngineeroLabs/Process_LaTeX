@@ -161,8 +161,8 @@ else
   {
     print "Error: Unable to copy \"template.aux\" to \"$PID_Path\".";
   }
-  # elsif (!copy("$ProcessLatex_Path/preview.sty", "$PID_Path"))
-  elsif (system("cp $ProcessLatex_Path/preview.sty $PID_Path/"))
+  elsif (!copy("$ProcessLatex_Path/preview.sty", "$PID_Path"))
+  # elsif (system("cp $ProcessLatex_Path/preview.sty $PID_Path/"))
   {
     print "Error: Unable to copy \"preview.sty\" to \"$PID_Path\".";
   }
@@ -209,7 +209,7 @@ sub Create_Image
   my $temp;
 
   # Set the TEXINPUTS environment variable so that LaTeX knows where to look
-  $ENV{TEXINPUTS} = "$PID_Path/:$ENV{TEXINPUTS}";
+  $ENV{TEXINPUTS} = "$PID_Path:"; # :$ENV{TEXINPUTS}";
   # system("export TEXINPUTS=$PID_Path//:");
   #save the LaTeX string to file "equation.tex", which is referenced by the
   #latex template
@@ -274,9 +274,6 @@ sub Create_Image
   # my $DvipngCall = "$Dvipng_Path/dvipng -D$res -Q 1 $Local_Path/template.dvi -depth >$Local_Path/dvipng_output.txt";
 
   my $DvipngCall = "dvipng -D$res -Q 1 -o \"$Local_Path/template1.png\" \"$Local_Path/template.dvi\" -depth > $Local_Path/dvipng_output.txt";
-  print "\n========================================\n";
-  print $DvipngCall;
-  print "\n========================================\n";
   $temp = system($DvipngCall);
   if ($temp >> 8)
   {
